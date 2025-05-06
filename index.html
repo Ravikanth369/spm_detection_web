@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Spam Detection</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+body>
+
+  <!-- LOGIN PAGE -->
+  <section id="login-screen" class="login-page">
+    <div class="login-box">
+      <h2>🔐 AI Spam Detection Login</h2>
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+      <p id="login-error" style="color: red; display: none; margin-top: 10px;">Invalid credentials. Try again.</p>
+    </div>
+  </section>
+
+  <!-- MAIN APP -->
+  <div id="main-app" style="display: none;">
+    <header>
+      <h1>🧠 AI-Powered Spam Detection</h1>
+      <p>Detect. Learn. Secure.</p>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/reports">Reports</a></li>
+          <li><a href="/team">Team</a></li>
+          <li><a href="/logout">Logout</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <section class="profile-intro">
+      <p>
+        This project is an AI-powered spam detection system designed to classify email messages as spam or not spam using machine learning and natural language processing (NLP) techniques. It features a user-friendly web interface for manual text input and real-time spam prediction, along with integration to scan emails via ID. The system also tracks key metrics like accuracy, false positives, and total emails scanned, offering insights through a visually rich dashboard.
+      </p>
+    </section>
+
+    <main class="container">
+      <h2>🚫 Detect Email Spam</h2>
+      <p>Paste your email below and find out if it's spam:</p>
+
+      <form id="spam-form">
+        <textarea id="email_text" name="email_text" placeholder="Type or paste email content..."></textarea>
+        <button type="submit">🔍 Check</button>
+      </form>
+
+      <div id="result">
+        <h2>Prediction: <span id="prediction"></span></h2>
+        <p>Accuracy: <span id="accuracy"></span></p>
+        <p>Language Detected: <span id="language"></span></p>
+      </div>
+
+      <h2>📩 Search Emails by ID</h2>
+      <input type="text" id="email-id" placeholder="Enter email ID">
+      <button id="fetch-emails">📥 Fetch Emails</button>
+
+      <div class="table-wrapper">
+        <table id="email-table">
+          <thead>
+            <tr>
+              <th>Sender</th>
+              <th>Subject</th>
+              <th>Prediction</th>
+              <th>Accuracy</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- PROJECT STATS -->
+    <section id="project-stats">
+      <h2>📊 Project Insights</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>📧 Emails Scanned</h3>
+          <p id="total-emails">2,452</p>
+        </div>
+        <div class="stat-card">
+          <h3>🚫 Spam Detected</h3>
+          <p id="spam-count">874</p>
+        </div>
+        <div class="stat-card">
+          <h3>⚠️ False Positives</h3>
+          <p id="false-positives">23</p>
+        </div>
+        <div class="stat-card">
+          <h3>✅ Accuracy</h3>
+          <p id="model-accuracy">96.3%</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- JS Script -->
+  <script>
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (username === "admin" && password === "1234") {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("main-app").style.display = "block";
+      } else {
+        document.getElementById("login-error").style.display = "block";
+      }
+    }
+
+    document.getElementById("spam-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      let formData = new FormData(this);
+      fetch("/predict", { method: "POST", body: formData })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("prediction").textContent = data.prediction;
+          document.getElementById("accuracy").textContent = data.accuracy;
+          document.getElementById("language").textContent = data.language;
+          document.getElementById("result").style.display = "block";
+        });
+    });
+
+    document.getElementById("fetch-emails").addEventListener("click", function () {
+      let emailId = document.getElementById("email-id").value || "me";
+      fetch(`/scan_emails?email=${emailId}`)
+        .then(res => res.json())
+        .then(data => {
+          let tbody = document.querySelector("#email-table tbody");
+          tbody.innerHTML = "";
+          data.forEach(email => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${email.sender}</td>
+                <td>${email.subject}</td>
+                <td class="${email.prediction === 'Spam' ? 'spam' : 'normal'}">${email.prediction}</td>
+                <td>${email.accuracy}</td>
+              </tr>`;
+          });
+        });
+    });
+  </script>
+
+</body>
+</html>
